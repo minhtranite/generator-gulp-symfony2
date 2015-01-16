@@ -35,6 +35,52 @@ Finally, initiate the generator:
 yo gulp-symfony2
 ```
 
+### How to use
+
+`gulp-symfony2.yml`:
+
+```yml
+styles:
+  base.css:
+    - styles/reset.css
+    - styles/base.css
+  styles.css:
+    - styles/main.css
+scripts:
+  customs.js:
+    - scripts/customs.js
+```
+
+Twig:
+
+```
+...
+{% block stylesheets %}
+  <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="/styles/styles.css">
+{% endblock %}
+...
+{% block javascripts %}
+  <script src="/scripts/customs.js"></script>
+{% endblock %}
+...
+...
+```
+
+### Gulp task
+Build:
+
+```bash
+gulp build
+```
+
+Build & Watch (dev):
+
+```bash
+gulp serve
+```
+
+
 ### Getting To Know Yeoman
 
 Yeoman has a heart of gold. He's a person with feelings and opinions, but he's very easy to work with. If you think he's too opinionated, he can be easily convinced.
