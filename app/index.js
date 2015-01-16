@@ -9,7 +9,7 @@ module.exports = yeoman.generators.Base.extend({
     this.pkg = require('../package.json');
     this.useCompass = false;
     this.useBundler = false;
-    this.domain = 'localhost';
+    this.appDomain = 'localhost';
   },
 
   prompting: function () {
@@ -27,7 +27,7 @@ module.exports = yeoman.generators.Base.extend({
         default: path.basename(this.destinationRoot())
       },
       {
-        name: 'domain',
+        name: 'appDomain',
         message: 'What is your app\'s domain ?',
         default: 'localhost'
       },
@@ -50,7 +50,7 @@ module.exports = yeoman.generators.Base.extend({
 
     this.prompt(prompts, function (props) {
       this.appName = props.appName;
-      this.domain = props.domain;
+      this.appDomain = props.appDomain;
       this.useCompass = props.useCompass;
       this.useBundler = !props.useBundler ? false : props.useBundler;
       done();
@@ -82,7 +82,11 @@ module.exports = yeoman.generators.Base.extend({
       this.fs.copyTpl(
         this.templatePath('_gulpfile.js'),
         this.destinationPath('gulpfile.js'),
-        {use_compass: this.useCompass, domain: this.Domain}
+        {
+          use_compass: this.useCompass,
+          use_bundler: this.useBundler,
+          app_domain: this.appDomain
+        }
       );
       this.fs.copyTpl(
         this.templatePath('_gulp-symfony2.yml'),

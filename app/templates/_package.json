@@ -5,6 +5,7 @@
   "devDependencies": {
     "browser-sync": "^1.9.0",
     "gulp": "^3.8.10",
+    "del": "^1.1.1",
     "gulp-autoprefixer": "^2.1.0",
 <% if(use_compass){ %>
     "gulp-compass": "^2.0.3",
