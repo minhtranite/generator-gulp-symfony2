@@ -1,0 +1,9 @@
+styles:
+#  base.css:
+#    - styles/reset.css
+#    - styles/base.css
+#  styles.css:
+#    - styles/main.css
+scripts:
+#  global.js:
+#    - scripts/custom.js

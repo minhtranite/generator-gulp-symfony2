@@ -1,0 +1,116 @@
+'use strict';
+var yeoman = require('yeoman-generator');
+var chalk = require('chalk');
+var yosay = require('yosay');
+var path = require('path');
+
+module.exports = yeoman.generators.Base.extend({
+  initializing: function () {
+    this.pkg = require('../package.json');
+    this.useCompass = false;
+    this.useBundler = false;
+    this.domain = 'localhost';
+  },
+
+  prompting: function () {
+    var done = this.async();
+
+    // Have Yeoman greet the user.
+    this.log(yosay(
+      'Welcome to the ' + chalk.red('Gulp Symfony2') + ' generator!'
+    ));
+
+    var prompts = [
+      {
+        name: 'appName',
+        message: 'What is your app\'s name ?',
+        default: path.basename(this.destinationRoot())
+      },
+      {
+        name: 'domain',
+        message: 'What is your app\'s domain ?',
+        default: 'localhost'
+      },
+      {
+        name: 'useCompass',
+        message: 'Do you want use Compass ?',
+        type: 'confirm',
+        default: false
+      },
+      {
+        name: 'useBundler',
+        message: 'Do you want use Bundler ?',
+        type: 'confirm',
+        default: false,
+        when: function (props) {
+          return props.useCompass;
+        }
+      }
+    ];
+
+    this.prompt(prompts, function (props) {
+      this.appName = props.appName;
+      this.domain = props.domain;
+      this.useCompass = props.useCompass;
+      this.useBundler = !props.useBundler ? false : props.useBundler;
+      done();
+    }.bind(this));
+  },
+
+  writing: {
+    app: function () {
+      this.mkdir('app/Resources/public/styles');
+      this.mkdir('app/Resources/public/scripts');
+      this.mkdir('app/Resources/public/fonts');
+      this.mkdir('app/Resources/public/images');
+      this.mkdir('app/Resources/public/vendor');
+
+      this.fs.copyTpl(
+        this.templatePath('_package.json'),
+        this.destinationPath('package.json'),
+        {app_name: this.appName, use_compass: this.useCompass}
+      );
+      this.fs.copyTpl(
+        this.templatePath('_bower.json'),
+        this.destinationPath('bower.json'),
+        {app_name: this.appName}
+      );
+      this.fs.copyTpl(
+        this.templatePath('bowerrc'),
+        this.destinationPath('.bowerrc')
+      );
+      this.fs.copyTpl(
+        this.templatePath('_gulpfile.js'),
+        this.destinationPath('gulpfile.js'),
+        {use_compass: this.useCompass, domain: this.Domain}
+      );
+      this.fs.copyTpl(
+        this.templatePath('_gulp-symfony2.yml'),
+        this.destinationPath('gulp-symfony2.yml')
+      );
+      if (this.useCompass) {
+        this.fs.copyTpl(
+          this.templatePath('_config.rb'),
+          this.destinationPath('config.rb')
+        );
+      }
+    },
+
+    projectfiles: function () {
+      this.fs.copy(
+        this.templatePath('editorconfig'),
+        this.destinationPath('.editorconfig')
+      );
+      this.fs.copy(
+        this.templatePath('jshintrc'),
+        this.destinationPath('.jshintrc')
+      );
+    }
+  },
+
+  install: function () {
+    this.installDependencies({
+      skipInstall: this.options['skip-install']
+    });
+  }
+});
