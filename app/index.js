@@ -109,6 +109,16 @@ module.exports = yeoman.generators.Base.extend({
         this.templatePath('jshintrc'),
         this.destinationPath('.jshintrc')
       );
+      if (this.fs.exists('.gitignore')) {
+        var contents = this.fs.read('.gitignore', {defaults: ''});
+        contents = contents + "\nnode_modules";
+        this.fs.write('.gitignore', contents);
+      } else {
+        this.fs.copy(
+          this.templatePath('gitignore'),
+          this.destinationPath('.gitignore')
+        );
+      }
     }
   },
 
