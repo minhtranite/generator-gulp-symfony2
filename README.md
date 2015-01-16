@@ -29,7 +29,7 @@ To install generator-gulp-symfony2 from npm, run:
 npm install -g generator-gulp-symfony2
 ```
 
-Finally, initiate the generator:
+Finally, go to symfony2 root project and initiate the generator:
 
 ```bash
 yo gulp-symfony2
