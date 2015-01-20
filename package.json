@@ -1,6 +1,6 @@
 {
   "name": "generator-gulp-symfony2",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Yeoman generator",
   "license": "MIT",
   "main": "app/index.js",
@@ -21,6 +21,7 @@
   ],
   "keywords": [
     "yeoman-generator",
+    "generator",
     "gulp",
     "symfony2",
     "frontend"
