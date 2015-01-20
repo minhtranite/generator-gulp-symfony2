@@ -65,6 +65,29 @@ module.exports = yeoman.generators.Base.extend({
       this.mkdir('app/Resources/public/images');
       this.mkdir('app/Resources/public/vendor');
 
+      this.fs.copy(
+        this.templatePath('scripts/_bar.js'),
+        this.destinationPath('app/Resources/public/scripts/bar.js')
+      );
+      if(this.useCompass){
+        this.fs.copy(
+          this.templatePath('styles/_bar.scss'),
+          this.destinationPath('app/Resources/public/styles/bar.scss')
+        );
+      }else{
+        this.fs.copy(
+          this.templatePath('styles/_bar.css'),
+          this.destinationPath('app/Resources/public/styles/bar.css')
+        );
+      }
+      this.fs.copy(
+        this.templatePath('images/_yeoman.png'),
+        this.destinationPath('app/Resources/public/images/yeoman.png')
+      );
+      this.fs.copy(
+        this.templatePath('fonts/**/*'),
+        this.destinationPath('app/Resources/public/fonts')
+      );
       this.fs.copyTpl(
         this.templatePath('_package.json'),
         this.destinationPath('package.json'),
@@ -90,13 +113,20 @@ module.exports = yeoman.generators.Base.extend({
       );
       this.fs.copyTpl(
         this.templatePath('_gulp-symfony2.yml'),
-        this.destinationPath('gulp-symfony2.yml')
+        this.destinationPath('gulp-symfony2.yml'),
+        {use_compass: this.useCompass}
       );
       if (this.useCompass) {
         this.fs.copyTpl(
           this.templatePath('_config.rb'),
           this.destinationPath('config.rb')
         );
+        if (this.useBundler) {
+          this.fs.copyTpl(
+            this.templatePath('_Gemfile'),
+            this.destinationPath('Gemfile')
+          );
+        }
       }
     },
 

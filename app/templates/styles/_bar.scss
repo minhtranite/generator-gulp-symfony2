@@ -1,0 +1,19 @@
+@import "compass";
+
+@include font-face(
+  'Roboto',
+  font-files(
+      'roboto/RobotoCondensed-Regular.woff',
+      'roboto/RobotoCondensed-Regular.ttf'
+  ),
+  'roboto/RobotoCondensed-Regular.eot',
+  normal,
+  normal
+);
+
+body {
+  background: #EEE;
+  color: #222;
+  font-family: Roboto, sans-serif;
+  font-size: 16px;
+}

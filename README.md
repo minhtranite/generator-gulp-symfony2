@@ -35,6 +35,46 @@ Finally, go to symfony2 root project and initiate the generator:
 yo gulp-symfony2
 ```
 
+### Directory structure
+```
+.
+├── app
+│   └── Resources
+│       └── public
+│           ├── fonts
+│           │   └── roboto
+│           │       ├── RobotoCondensed-Regular.eot
+│           │       ├── RobotoCondensed-Regular.ttf
+│           │       └── RobotoCondensed-Regular.woff
+│           ├── images
+│           │   └── yeoman.png
+│           ├── scripts
+│           │   └── bar.js
+│           ├── styles
+│           │   ├── bar.css
+│           │   └── bar.scss
+│           └── vendor
+├── bower.json
+├── config.rb
+├── Gemfile
+├── Gemfile.lock
+├── gulpfile.js
+├── gulp-symfony2.yml
+├── node_modules
+├── package.json
+└── web
+    ├── fonts
+    │   ├── RobotoCondensed-Regular.eot
+    │   ├── RobotoCondensed-Regular.ttf
+    │   └── RobotoCondensed-Regular.woff
+    ├── images
+    │   └── yeoman.png
+    ├── scripts
+    │   └── foo.js
+    └── styles
+        └── foo.css
+```
+
 ### How to use
 
 `gulp-symfony2.yml`:

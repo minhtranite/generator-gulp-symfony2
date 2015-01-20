@@ -7,6 +7,7 @@ css_dir = "app/Resources/public/styles"
 sass_dir = "app/Resources/public/styles"
 images_dir = "app/Resources/public/images"
 javascripts_dir = "app/Resources/public/scripts"
+fonts_dir = "app/Resources/public/fonts"
 
 # You can select your preferred output style here (can be overridden via the command line):
 # output_style = :expanded or :nested or :compact or :compressed

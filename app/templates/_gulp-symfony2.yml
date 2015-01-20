@@ -1,9 +1,6 @@
 styles:
-#  base.css:
-#    - styles/reset.css
-#    - styles/base.css
-#  styles.css:
-#    - styles/main.css
+  foo.css:
+<% if(use_compass){ %>    - styles/bar.scss <% } else { %>    - styles/bar.css <% } %>
 scripts:
-#  global.js:
-#    - scripts/custom.js
+  foo.js:
+    - scripts/bar.js

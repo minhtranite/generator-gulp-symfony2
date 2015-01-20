@@ -3,11 +3,9 @@
 var gulp = require('gulp');
 var yaml = require('js-yaml');
 var fs = require('fs');
-var filter = require('gulp-filter');
-<% if(use_compass){ %>
+var filter = require('gulp-filter');<% if(use_compass){ %>
 var compass = require('gulp-compass');
-<% } %>
-var concat = require('gulp-concat');
+<% } %>var concat = require('gulp-concat');
 var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
 var csso = require('gulp-csso');
@@ -20,12 +18,8 @@ var runSequence = require('run-sequence');
 var browserSync = require('browser-sync');
 var del = require('del');
 
-var gulpSymfony2 = getConfigs();
-var srcPath = 'app/Resources/public';
-var destPath = 'web';
-
 function getConfigs() {
-  var configs = undefined;
+  var configs;
   try {
     configs = yaml.safeLoad(fs.readFileSync('./gulp-symfony2.yml', 'utf8'));
   } catch (e) {
@@ -33,6 +27,10 @@ function getConfigs() {
   }
   return configs;
 }
+
+var gulpSymfony2 = getConfigs();
+var srcPath = 'app/Resources/public';
+var destPath = 'web';
 
 function getFullPath(file) {
   return srcPath + '/' + file;
@@ -43,30 +41,28 @@ gulp.task('getConfigs', function () {
 });
 
 gulp.task('styles', ['getConfigs'], function () {
-  if(typeof gulpSymfony2.styles !== 'object'){
+  if (typeof gulpSymfony2.styles !== 'object') {
     return;
   }
   for (var destFile in gulpSymfony2.styles) {
     if (gulpSymfony2.styles[destFile] !== null && gulpSymfony2.styles[destFile].length > 0) {
       var src = gulpSymfony2.styles[destFile].map(function (file) {
         return getFullPath(file);
-      });
-      var scssFilter = filter('**/*.scss');
-      gulp.src(src)
-      <% if(use_compass){ %>
+      }); // jshint ignore:line<% if(use_compass){ %>
+      var scssFilter = filter('**/*.scss');<% } %>
+      gulp.src(src)<% if(use_compass){ %>
         .pipe(scssFilter)
         .pipe(compass({
-          config_file: './config.rb',
+          config_file: './config.rb', // jshint ignore:line
           sass: srcPath + '/styles',
           css: srcPath + '/styles',
-          bundle_exec: <%= use_bundler %>
+          bundle_exec: <%= use_bundler %> // jshint ignore:line
         }))
         .on('error', function (error) {
           console.error(error.toString());
           this.emit('end');
-        })
-        .pipe(scssFilter.restore())
-      <% } %>
+        }) // jshint ignore:line
+        .pipe(scssFilter.restore())<% } %>
         .pipe(concat(destFile))
         .pipe(autoprefixer('last 1 version'))
         .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
@@ -77,19 +73,19 @@ gulp.task('styles', ['getConfigs'], function () {
 });
 
 gulp.task('scripts', ['getConfigs'], function () {
-  if(typeof gulpSymfony2.scripts !== 'object'){
+  if (typeof gulpSymfony2.scripts !== 'object') {
     return;
   }
   for (var destFile in gulpSymfony2.scripts) {
     if (gulpSymfony2.scripts[destFile] !== null && gulpSymfony2.scripts[destFile].length > 0) {
       var src = gulpSymfony2.scripts[destFile].map(function (file) {
         return getFullPath(file);
-      });
+      }); // jshint ignore:line
       var customScriptsFilter = filter(function (file) {
         var path = file.path;
         var ignore = srcPath + '/vendor';
         return path.indexOf(ignore) === -1;
-      });
+      }); // jshint ignore:line
       gulp.src(src)
         .pipe(customScriptsFilter)
         .pipe(jshint())
@@ -108,7 +104,7 @@ gulp.task('images', function () {
       optimizationLevel: 3,
       interlaced: true
     }))
-    .pipe(gulp.dest(destPath + '/images'))
+    .pipe(gulp.dest(destPath + '/images'));
 });
 
 gulp.task('fonts', function () {
@@ -119,7 +115,7 @@ gulp.task('fonts', function () {
       .pipe(flatten())
       .pipe(gulp.dest(destPath + '/fonts'));
   }
-  gulp.src('app/fonts/**/*')
+  gulp.src(srcPath + '/fonts/**/*')
     .pipe(filter('**/*.{eot,svg,ttf,woff}'))
     .pipe(flatten())
     .pipe(gulp.dest(destPath + '/fonts'));
@@ -147,16 +143,17 @@ gulp.task('watch', function () {
   gulp.watch(srcPath + '/scripts/**/*', ['scripts']);
   gulp.watch(srcPath + '/images/**/*', ['images']);
   gulp.watch(srcPath + '/fonts/**/*', ['fonts']);
+  gulp.watch('bower.json', ['fonts']);
   gulp.watch('gulp-symfony2.yml', ['build']);
 });
 
-gulp.task('serve', ['build','watch'], function () {
+gulp.task('serve', ['build', 'watch'], function () {
   browserSync.instance = browserSync.init([
     srcPath + '/../views/**/*.twig',
     destPath + '/**/*'
   ], {
     startPath: '/app_dev.php',
-    proxy: "<%= app_domain %>"
+    proxy: '<%= app_domain %>'
   });
 });
 
