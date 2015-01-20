@@ -20,7 +20,10 @@
     "app"
   ],
   "keywords": [
-    "yeoman-generator"
+    "yeoman-generator",
+    "gulp",
+    "symfony2",
+    "frontend"
   ],
   "dependencies": {
     "chalk": "^0.5.0",
