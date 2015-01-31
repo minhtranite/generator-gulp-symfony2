@@ -66,6 +66,7 @@ gulp.task('styles', ['getConfigs'], function () {
         .pipe(concat(destFile))
         .pipe(autoprefixer('last 1 version'))
         .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
+        .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(png|jpg|gif))/g, '../images/$2'))
         .pipe(csso())
         .pipe(gulp.dest(destPath + '/styles'));
     }
@@ -99,7 +100,11 @@ gulp.task('scripts', ['getConfigs'], function () {
 });
 
 gulp.task('images', function () {
-  return gulp.src(srcPath + '/images/**/*')
+  var sources = [
+    srcPath + '/images/**/*.{png,jpg,gif}',
+    srcPath + '/vendor/**/*.{png,jpg,gif}'
+  ];
+  return gulp.src(sources)
     .pipe(imagemin({
       optimizationLevel: 3,
       interlaced: true
@@ -143,11 +148,11 @@ gulp.task('watch', function () {
   gulp.watch(srcPath + '/scripts/**/*', ['scripts']);
   gulp.watch(srcPath + '/images/**/*', ['images']);
   gulp.watch(srcPath + '/fonts/**/*', ['fonts']);
-  gulp.watch('bower.json', ['fonts']);
-  gulp.watch('gulp-symfony2.yml', ['build']);
+  gulp.watch('bower.json', ['fonts', 'images']);
+  gulp.watch('gulp-symfony2.yml', ['styles', 'scripts']);
 });
 
-gulp.task('serve', ['build', 'watch'], function () {
+gulp.task('serve', ['styles', 'scripts', 'images', 'fonts', 'watch'], function () {
   browserSync.instance = browserSync.init([
     srcPath + '/../views/**/*.twig',
     destPath + '/**/*'
