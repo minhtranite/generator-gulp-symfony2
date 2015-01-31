@@ -17,6 +17,9 @@ var flatten = require('gulp-flatten');
 var runSequence = require('run-sequence');
 var browserSync = require('browser-sync');
 var del = require('del');
+var cache = require('gulp-cached');
+var remember = require('gulp-remember');
+var changed = require('gulp-changed');
 
 function getConfigs() {
   var configs;
@@ -50,7 +53,8 @@ gulp.task('styles', ['getConfigs'], function () {
         return getFullPath(file);
       }); // jshint ignore:line<% if(use_compass){ %>
       var scssFilter = filter('**/*.scss');<% } %>
-      gulp.src(src)<% if(use_compass){ %>
+      gulp.src(src)
+        .pipe(cache(destFile))<% if(use_compass){ %>
         .pipe(scssFilter)
         .pipe(compass({
           config_file: './config.rb', // jshint ignore:line
@@ -63,7 +67,9 @@ gulp.task('styles', ['getConfigs'], function () {
           this.emit('end');
         }) // jshint ignore:line
         .pipe(scssFilter.restore())<% } %>
+        .pipe(remember(destFile))
         .pipe(concat(destFile))
+        .pipe(changed(destPath + '/styles'))
         .pipe(autoprefixer('last 1 version'))
         .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
         .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(png|jpg|gif))/g, '../images/$2'))
@@ -88,11 +94,14 @@ gulp.task('scripts', ['getConfigs'], function () {
         return path.indexOf(ignore) === -1;
       }); // jshint ignore:line
       gulp.src(src)
+        .pipe(cache(destFile))
         .pipe(customScriptsFilter)
         .pipe(jshint())
         .pipe(jshint.reporter('jshint-stylish'))
         .pipe(customScriptsFilter.restore())
+        .pipe(remember(destFile))
         .pipe(concat(destFile))
+        .pipe(changed(destPath + '/scripts'))
         .pipe(uglify())
         .pipe(gulp.dest(destPath + '/scripts'));
     }
@@ -105,23 +114,21 @@ gulp.task('images', function () {
     srcPath + '/vendor/**/*.{png,jpg,gif}'
   ];
   return gulp.src(sources)
+    .pipe(cache('images'))
     .pipe(imagemin({
       optimizationLevel: 3,
       interlaced: true
     }))
+    .pipe(flatten())
     .pipe(gulp.dest(destPath + '/images'));
 });
 
 gulp.task('fonts', function () {
   var files = mainBowerFiles();
-  if (files.length > 0) {
-    gulp.src(files)
-      .pipe(filter('**/*.{eot,svg,ttf,woff}'))
-      .pipe(flatten())
-      .pipe(gulp.dest(destPath + '/fonts'));
-  }
-  gulp.src(srcPath + '/fonts/**/*')
+  files.push(srcPath + '/fonts/**/*');
+  gulp.src(files)
     .pipe(filter('**/*.{eot,svg,ttf,woff}'))
+    .pipe(cache('fonts'))
     .pipe(flatten())
     .pipe(gulp.dest(destPath + '/fonts'));
 });
