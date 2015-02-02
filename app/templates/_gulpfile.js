@@ -4,8 +4,8 @@ var gulp = require('gulp');
 var yaml = require('js-yaml');
 var fs = require('fs');
 var filter = require('gulp-filter');<% if(use_compass){ %>
-var compass = require('gulp-compass');
-<% } %>var concat = require('gulp-concat');
+var compass = require('gulp-compass');<% } %>
+var concat = require('gulp-concat');
 var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
 var csso = require('gulp-csso');
@@ -17,152 +17,286 @@ var flatten = require('gulp-flatten');
 var runSequence = require('run-sequence');
 var browserSync = require('browser-sync');
 var del = require('del');
-var cache = require('gulp-cached');
+var cached = require('gulp-cached');
 var remember = require('gulp-remember');
 var changed = require('gulp-changed');
+var mux = require('gulp-mux');
+var diff = require('deep-diff').diff;
+var rename = require('gulp-rename');
+var path = require('path');
+var beeper = require('beeper');
+var chalk = require('chalk');
 
 function getConfigs() {
   var configs;
   try {
     configs = yaml.safeLoad(fs.readFileSync('./gulp-symfony2.yml', 'utf8'));
   } catch (e) {
+    console.error(chalk.red('Can\'t get configs'));
     console.error(e);
   }
   return configs;
 }
 
-var gulpSymfony2 = getConfigs();
-var srcPath = 'app/Resources/public';
-var destPath = 'web';
+var appDir = 'app';
+var appPublicDir = appDir + '/Resources/public';
+var srcDir = 'src';
+var destDir = 'web';
+var tmpDir = '.tmp';
+var oldConfigs = getConfigs();
 
-function getFullPath(file) {
-  return srcPath + '/' + file;
+function getAbsolutePath(mPath, isFile) {
+  mPath = path.normalize(mPath);
+  if (!fs.existsSync(mPath) || (isFile && !fs.statSync(mPath).isFile())) {
+    console.error(chalk.red((isFile ? 'File ' : '') + '\'' + mPath + '\' does\'t exist.'));
+    beeper();
+    return undefined;
+  }
+  return fs.realpathSync(mPath);
 }
 
-gulp.task('getConfigs', function () {
-  gulpSymfony2 = getConfigs();
-});
-
-gulp.task('styles', ['getConfigs'], function () {
-  if (typeof gulpSymfony2.styles !== 'object') {
-    return;
+function getDestFiles(objectName, file) {
+  var configs = getConfigs();
+  var destFiles = [];
+  var object = configs[objectName];
+  if (typeof configs[objectName] !== 'object') {
+    return destFiles;
   }
-  for (var destFile in gulpSymfony2.styles) {
-    if (gulpSymfony2.styles[destFile] !== null && gulpSymfony2.styles[destFile].length > 0) {
-      var src = gulpSymfony2.styles[destFile].map(function (file) {
-        return getFullPath(file);
-      }); // jshint ignore:line<% if(use_compass){ %>
-      var scssFilter = filter('**/*.scss');<% } %>
-      gulp.src(src)
-        .pipe(cache(destFile))<% if(use_compass){ %>
-        .pipe(scssFilter)
-        .pipe(compass({
-          config_file: './config.rb', // jshint ignore:line
-          sass: srcPath + '/styles',
-          css: srcPath + '/styles',
-          bundle_exec: <%= use_bundler %> // jshint ignore:line
-        }))
-        .on('error', function (error) {
-          console.error(error.toString());
-          this.emit('end');
-        }) // jshint ignore:line
-        .pipe(scssFilter.restore())<% } %>
-        .pipe(remember(destFile))
-        .pipe(concat(destFile))
-        .pipe(changed(destPath + '/styles'))
-        .pipe(autoprefixer('last 1 version'))
-        .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
-        .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(png|jpg|gif))/g, '../images/$2'))
-        .pipe(csso())
-        .pipe(gulp.dest(destPath + '/styles'));
+  for (var destFile in object) {
+    if (object[destFile] !== null && object[destFile].length > 0) {
+      for (var i = 0; i < object[destFile].length; i++) {
+        var currentFile = getAbsolutePath(object[destFile][i]);
+        if (currentFile === file) {
+          destFiles.push(destFile);
+        }
+      }
     }
   }
-});
+  return destFiles;
+}
 
-gulp.task('scripts', ['getConfigs'], function () {
-  if (typeof gulpSymfony2.scripts !== 'object') {
+gulp.task('styles', function () {
+  var configs = getConfigs();
+  if (typeof configs.styles !== 'object') {
     return;
   }
-  for (var destFile in gulpSymfony2.scripts) {
-    if (gulpSymfony2.scripts[destFile] !== null && gulpSymfony2.scripts[destFile].length > 0) {
-      var src = gulpSymfony2.scripts[destFile].map(function (file) {
-        return getFullPath(file);
-      }); // jshint ignore:line
-      var customScriptsFilter = filter(function (file) {
-        var path = file.path;
-        var ignore = srcPath + '/vendor';
-        return path.indexOf(ignore) === -1;
-      }); // jshint ignore:line
-      gulp.src(src)
-        .pipe(cache(destFile))
-        .pipe(customScriptsFilter)
-        .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'))
-        .pipe(customScriptsFilter.restore())
-        .pipe(remember(destFile))
-        .pipe(concat(destFile))
-        .pipe(changed(destPath + '/scripts'))
-        .pipe(uglify())
-        .pipe(gulp.dest(destPath + '/scripts'));
+
+  var targets = [];
+  var constants = {
+    destFile: '{{targetName}}'
+  };
+  var task = function (constant) {
+    var src = configs.styles[constant.destFile].map(function (file) {
+      return getAbsolutePath(file, true);
+    });<% if(use_compass){ %>
+    var scssFilter = filter('**/*.scss');<% } %>
+    return gulp.src(src)
+      .pipe(cached(constant.destFile))<% if(use_compass){ %>
+      .pipe(scssFilter)
+      .pipe(rename(function (path) {
+        path.basename = '.' + path.basename;
+      }))
+      .pipe(gulp.dest(appPublicDir + '/styles'))
+      .pipe(compass({
+        config_file: './config.rb', // jshint ignore:line
+        sass: appPublicDir + '/styles',
+        css: appPublicDir + '/styles',
+        bundle_exec: <%= use_bundler %> // jshint ignore:line
+      }))
+      .on('error', function (error) {
+        console.error(error.toString());
+        this.emit('end');
+      })
+      .pipe(rename(function (path) {
+        path.basename = path.basename.replace('.', '');
+      }))
+      .pipe(scssFilter.restore())<% } %>
+      .pipe(remember(constant.destFile))
+      .pipe(changed(tmpDir + '/styles/' + constant.destFile.replace('.', '_')))
+      .pipe(gulp.dest(tmpDir + '/styles/' + constant.destFile.replace('.', '_')))
+      .pipe(concat(constant.destFile))
+      .pipe(autoprefixer('last 1 version'))
+      .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
+      .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(png|jpg|gif))/g, '../images/$2'))
+      .pipe(csso())
+      .pipe(gulp.dest(destDir + '/styles'));
+  };
+
+  for (var destFile in configs.styles) {
+    if (configs.styles[destFile] !== null && configs.styles[destFile].length > 0) {
+      targets.push(destFile);
     }
   }
+  return mux.createAndRunTasks(gulp, task, 'style', targets, '', constants);
+});
+
+gulp.task('scripts', function () {
+  var configs = getConfigs();
+  if (typeof configs.scripts !== 'object') {
+    return;
+  }
+
+  var targets = [];
+  var constants = {
+    destFile: '{{targetName}}'
+  };
+  var task = function (constant) {
+    var src = configs.scripts[constant.destFile].map(function (file) {
+      return getAbsolutePath(file, true);
+    });
+    var customScriptsFilter = filter(function (file) {
+      var path = file.path;
+      var ignore = appPublicDir + '/vendor';
+      return path.indexOf(ignore) === -1;
+    });
+    return gulp.src(src)
+      .pipe(cached(constant.destFile))
+      .pipe(customScriptsFilter)
+      .pipe(jshint())
+      .pipe(jshint.reporter('jshint-stylish'))
+      .pipe(customScriptsFilter.restore())
+      .pipe(remember(constant.destFile))
+      .pipe(changed(tmpDir + '/scripts/' + constant.destFile.replace('.', '_')))
+      .pipe(gulp.dest(tmpDir + '/scripts/' + constant.destFile.replace('.', '_')))
+      .pipe(concat(constant.destFile))
+      .pipe(uglify())
+      .pipe(gulp.dest(destDir + '/scripts'));
+  };
+
+  for (var destFile in configs.scripts) {
+    if (configs.scripts[destFile] !== null && configs.scripts[destFile].length > 0) {
+      targets.push(destFile);
+    }
+  }
+  return mux.createAndRunTasks(gulp, task, 'script', targets, '', constants);
 });
 
 gulp.task('images', function () {
   var sources = [
-    srcPath + '/images/**/*.{png,jpg,gif}',
-    srcPath + '/vendor/**/*.{png,jpg,gif}'
+    appPublicDir + '/images/**/*.{png,jpg,gif}',
+    appPublicDir + '/vendor/**/*.{png,jpg,gif}'
   ];
   return gulp.src(sources)
-    .pipe(cache('images'))
+    .pipe(cached('images'))
     .pipe(imagemin({
       optimizationLevel: 3,
       interlaced: true
     }))
     .pipe(flatten())
-    .pipe(gulp.dest(destPath + '/images'));
+    .pipe(gulp.dest(destDir + '/images'));
 });
 
 gulp.task('fonts', function () {
   var files = mainBowerFiles();
-  files.push(srcPath + '/fonts/**/*');
-  gulp.src(files)
+  files.push(appPublicDir + '/fonts/**/*');
+  return gulp.src(files)
     .pipe(filter('**/*.{eot,svg,ttf,woff}'))
-    .pipe(cache('fonts'))
+    .pipe(cached('fonts'))
     .pipe(flatten())
-    .pipe(gulp.dest(destPath + '/fonts'));
+    .pipe(gulp.dest(destDir + '/fonts'));
 });
 
 gulp.task('clean', function () {
-  del([destPath + '/styles/**/*', destPath + '/scripts/**/*']);
-});
-
-gulp.task('clean:force', function () {
-  del([
-    destPath + '/styles/**/*',
-    destPath + '/scripts/**/*',
-    destPath + '/fonts/**/*',
-    destPath + '/images/**/*'
+  del.sync([
+    tmpDir + '/**/*',
+    appPublicDir + '/styles/**/.*',
+    destDir + '/styles/**/*',
+    destDir + '/scripts/**/*',
+    destDir + '/fonts/**/*',
+    destDir + '/images/**/*'
   ]);
 });
 
 gulp.task('build', ['clean'], function () {
-  runSequence('styles', 'scripts', 'images', 'fonts');
+  runSequence('styles', 'scripts', 'fonts', 'images');
 });
 
 gulp.task('watch', function () {
-  gulp.watch(srcPath + '/styles/**/*', ['styles']);
-  gulp.watch(srcPath + '/scripts/**/*', ['scripts']);
-  gulp.watch(srcPath + '/images/**/*', ['images']);
-  gulp.watch(srcPath + '/fonts/**/*', ['fonts']);
+  var stylesWatcher = gulp.watch([
+    appPublicDir + '/styles/**/*',
+    !appPublicDir + '/styles/**/.*'
+  ], ['styles']);
+  stylesWatcher.on('change', function (event) {
+    if (event.type === 'deleted') {
+      var destFiles = getDestFiles('styles', event.path);
+      if (destFiles.length > 0) {
+        destFiles.forEach(function (destFile) {
+          delete cached.caches[destFile][event.path];
+          remember.forget(destFile, event.path);
+        });
+      }
+    }
+    var arr = event.path.split('/');
+    var file = arr.pop();
+    if (file.indexOf('_') === 0) {
+      var configs = getConfigs();
+      var object = configs.styles;
+      if (typeof object === 'object') {
+        for (var destFile in object) {
+          delete cached.caches[destFile];
+          remember.forgetAll(destFile);
+          del([tmpDir + '/styles/' + destFile.replace('.', '_')]);
+        }
+      }
+    }
+  });
+  var scriptsWatcher = gulp.watch(appPublicDir + '/scripts/**/*', ['scripts']);
+  scriptsWatcher.on('change', function (event) {
+    if (event.type === 'deleted') {
+      var destFiles = getDestFiles('scripts', event.path);
+      if (destFiles.length > 0) {
+        destFiles.forEach(function (destFile) {
+          delete cached.caches[destFile][event.path];
+          remember.forget(destFile, event.path);
+        });
+      }
+    }
+  });
+  var fontsWatcher = gulp.watch(appPublicDir + '/fonts/**/*', ['fonts']);
+  fontsWatcher.on('change', function (event) {
+    if (event.type === 'deleted') {
+      delete cached.caches.fonts[event.path];
+    }
+  });
+  var imagesWatcher = gulp.watch(appPublicDir + '/images/**/*', ['images']);
+  imagesWatcher.on('change', function (event) {
+    if (event.type === 'deleted') {
+      delete cached.caches.images[event.path];
+    }
+  });
   gulp.watch('bower.json', ['fonts', 'images']);
-  gulp.watch('gulp-symfony2.yml', ['styles', 'scripts']);
+  var gulpSymfony2Watcher = gulp.watch('gulp-symfony2.yml', [
+    'styles',
+    'scripts'
+  ]);
+  gulpSymfony2Watcher.on('change', function () {
+    var configs = getConfigs();
+    var changes = diff(oldConfigs, configs);
+    oldConfigs = configs;
+    if (changes) {
+      changes.forEach(function (change) {
+        if ((change.kind === 'D' || change.kind === 'A') && change.path.length === 2) {
+          var destFile = change.path[1];
+          delete cached.caches[destFile];
+          remember.forgetAll(destFile);
+          del([tmpDir + '/' + change.path[0] + '/' + destFile.replace('.', '_')]);
+        }
+      });
+    }
+  });
 });
 
-gulp.task('serve', ['styles', 'scripts', 'images', 'fonts', 'watch'], function () {
+gulp.task('serve', [
+  'styles',
+  'scripts',
+  'fonts',
+  'images',
+  'watch'
+], function () {
   browserSync.instance = browserSync.init([
-    srcPath + '/../views/**/*.twig',
-    destPath + '/**/*'
+    appDir + '/**/*.twig',
+    srcDir + '/**/*.twig',
+    destDir + '/**/*'
   ], {
     startPath: '/app_dev.php',
     proxy: '<%= app_domain %>'

@@ -2,6 +2,16 @@
 
 > [Yeoman](http://yeoman.io) generator
 
+## Change logs:
+
+###### 1.0.0:
+
+- Fix missing bower component images.
+- Fix watch task.
+- Use cache, only process file changed.
+- Handle error.
+- Performance improvements.
+- Change file path in gulp-symfony.yml.
 
 ## Getting Started
 
@@ -81,14 +91,11 @@ yo gulp-symfony2
 
 ```yml
 styles:
-  base.css:
-    - styles/reset.css
-    - styles/base.css
-  styles.css:
-    - styles/main.css
+  foo.css:
+    - app/Resources/public/styles/bar.scss
 scripts:
-  customs.js:
-    - scripts/customs.js
+  foo.js:
+    - app/Resources/public/scripts/bar.js
 ```
 
 Twig:
@@ -96,12 +103,11 @@ Twig:
 ```
 ...
 {% block stylesheets %}
-  <link rel="stylesheet" href="/styles/base.css">
-  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/foo.css">
 {% endblock %}
 ...
 {% block javascripts %}
-  <script src="/scripts/customs.js"></script>
+  <script src="/scripts/foo.js"></script>
 {% endblock %}
 ...
 ...
@@ -109,24 +115,20 @@ Twig:
 
 ### Gulp task
 Build:
-
 ```bash
 gulp build
 ```
 
-Build & Watch (dev):
-
+Watch & rebuild file changed (dev):
 ```bash
 gulp serve
 ```
-
 
 ### Getting To Know Yeoman
 
 Yeoman has a heart of gold. He's a person with feelings and opinions, but he's very easy to work with. If you think he's too opinionated, he can be easily convinced.
 
 If you'd like to get to know Yeoman better and meet some of his friends, [Grunt](http://gruntjs.com) and [Bower](http://bower.io), check out the complete [Getting Started Guide](https://github.com/yeoman/yeoman/wiki/Getting-Started).
-
 
 ## License
 
