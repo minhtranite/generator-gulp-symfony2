@@ -58,8 +58,8 @@ yo gulp-symfony2
 
 ### Directory structure
 
-- [Symfony 2 template best practice] http://symfony.com/doc/current/best_practices/templates.html
-- [Symfony 2 web assets best practice] http://symfony.com/doc/current/best_practices/web-assets.html
+- [Symfony 2 template best practice](http://symfony.com/doc/current/best_practices/templates.html)
+- [Symfony 2 web assets best practice](http://symfony.com/doc/current/best_practices/web-assets.html)
 
 ```
 .
