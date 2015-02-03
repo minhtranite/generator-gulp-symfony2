@@ -19,7 +19,7 @@ var browserSync = require('browser-sync');
 var del = require('del');
 var cached = require('gulp-cached');
 var remember = require('gulp-remember');
-var changed = require('gulp-changed');
+var newer = require('gulp-newer');
 var mux = require('gulp-mux');
 var diff = require('deep-diff').diff;
 var path = require('path');
@@ -42,7 +42,6 @@ var appDir = 'app';
 var appPublicDir = appDir + '/Resources/public';
 var srcDir = 'src';
 var destDir = 'web';
-var tmpDir = '.tmp';
 var minify = false;
 var oldConfigs = getConfigs();
 
@@ -105,9 +104,8 @@ gulp.task('styles', function () {
         this.emit('end');
       })
       .pipe(scssFilter.restore())<% } %>
-      .pipe(changed(tmpDir + '/styles/' + constant.destFile.replace('.', '_')))
-      .pipe(gulp.dest(tmpDir + '/styles/' + constant.destFile.replace('.', '_')))
       .pipe(remember(constant.destFile))
+      .pipe(newer(destDir + '/styles/' + constant.destFile))
       .pipe(concat(constant.destFile))
       .pipe(autoprefixer('last 1 version'))
       .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
@@ -149,9 +147,8 @@ gulp.task('scripts', function () {
       .pipe(jshint())
       .pipe(jshint.reporter('jshint-stylish'))
       .pipe(customScriptsFilter.restore())
-      .pipe(changed(tmpDir + '/scripts/' + constant.destFile.replace('.', '_')))
-      .pipe(gulp.dest(tmpDir + '/scripts/' + constant.destFile.replace('.', '_')))
       .pipe(remember(constant.destFile))
+      .pipe(newer(destDir + '/scripts/' + constant.destFile))
       .pipe(concat(constant.destFile))
       .pipe(gulpIf(minify, uglify()))
       .pipe(gulp.dest(destDir + '/scripts'));
@@ -192,7 +189,6 @@ gulp.task('fonts', function () {
 
 gulp.task('clean', function () {
   del.sync([
-    tmpDir,
     appPublicDir + '/.styles',
     destDir + '/styles/**/*',
     destDir + '/scripts/**/*',
@@ -227,7 +223,7 @@ gulp.task('watch', function () {
         for (var destFile in object) {
           delete cached.caches[destFile];
           remember.forgetAll(destFile);
-          del([tmpDir + '/styles/' + destFile.replace('.', '_')]);
+          del.sync(destDir + '/styles/' + destFile);
         }
       }
     }
@@ -271,7 +267,6 @@ gulp.task('watch', function () {
           var destFile = change.path[1];
           delete cached.caches[destFile];
           remember.forgetAll(destFile);
-          del([tmpDir + '/' + change.path[0] + '/' + destFile.replace('.', '_')]);
         }
       });
     }

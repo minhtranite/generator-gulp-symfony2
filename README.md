@@ -4,10 +4,15 @@
 
 ## Change logs:
 
+###### 1.0.2:
+
+- Use 'gulp-newer' instead of 'gulp-changed'.
+- Fix concat missing files (update).
+
 ###### 1.0.1:
 
 - Fix concat missing files.
-- Move compass temporary files to 'app/Resources/public/.styles'
+- Move compass temporary files to 'app/Resources/public/.styles'.
 - Only minify when build.
 
 ###### 1.0.0:
@@ -52,6 +57,10 @@ yo gulp-symfony2
 ```
 
 ### Directory structure
+
+- [Symfony 2 template best practice] http://symfony.com/doc/current/best_practices/templates.html
+- [Symfony 2 web assets best practice] http://symfony.com/doc/current/best_practices/web-assets.html
+
 ```
 .
 ├── app

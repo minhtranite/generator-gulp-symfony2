@@ -1,6 +1,6 @@
 {
   "name": "generator-gulp-symfony2",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Yeoman generator",
   "license": "MIT",
   "main": "app/index.js",
@@ -23,8 +23,24 @@
     "yeoman-generator",
     "generator",
     "gulp",
+    "symfony",
     "symfony2",
-    "frontend"
+    "gulp-symfony2",
+    "frontend",
+    "assetic",
+    "asset management",
+    "asset files",
+    "stylesheet",
+    "javascripts",
+    "fonts",
+    "images",
+    "build",
+    "watch",
+    "serve",
+    "minify",
+    "twig",
+    "tools",
+    "automatic"
   ],
   "dependencies": {
     "chalk": "^0.5.0",

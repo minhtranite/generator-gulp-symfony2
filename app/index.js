@@ -141,7 +141,7 @@ module.exports = yeoman.generators.Base.extend({
       );
       if (this.fs.exists('.gitignore')) {
         var contents = this.fs.read('.gitignore', {defaults: ''});
-        contents = contents + "\n.sass-cache\n.tmp\nnode_modules\napp/Resources/public/.styles\napp/Resources/public/vendor/";
+        contents = contents + "\n.sass-cache\nnode_modules\napp/Resources/public/.styles\napp/Resources/public/vendor/";
         this.fs.write('.gitignore', contents);
       } else {
         this.fs.copy(

@@ -10,8 +10,7 @@
     "del": "^1.1.1",
     "gulp": "^3.8.10",
     "gulp-autoprefixer": "^2.1.0",
-    "gulp-cached": "^1.0.2",
-    "gulp-changed": "^1.1.1",<% if(use_compass){ %>
+    "gulp-cached": "^1.0.2",<% if(use_compass){ %>
     "gulp-compass": "^2.0.3",<% } %>
     "gulp-concat": "^2.4.3",
     "gulp-csso": "^0.2.9",
@@ -21,6 +20,7 @@
     "gulp-imagemin": "^2.1.0",
     "gulp-jshint": "^1.9.0",
     "gulp-mux": "^0.2.0",
+    "gulp-newer": "^0.5.0",
     "gulp-remember": "^0.3.0",
     "gulp-replace": "^0.5.0",
     "gulp-uglify": "^1.0.2",
