@@ -4,6 +4,12 @@
 
 ## Change logs:
 
+###### 1.0.1:
+
+- Fix concat missing files.
+- Move compass temporary files to 'app/Resources/public/.styles'
+- Only minify when build.
+
 ###### 1.0.0:
 
 - Fix missing bower component images.

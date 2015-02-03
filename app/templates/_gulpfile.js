@@ -22,10 +22,10 @@ var remember = require('gulp-remember');
 var changed = require('gulp-changed');
 var mux = require('gulp-mux');
 var diff = require('deep-diff').diff;
-var rename = require('gulp-rename');
 var path = require('path');
 var beeper = require('beeper');
 var chalk = require('chalk');
+var gulpIf = require('gulp-if');
 
 function getConfigs() {
   var configs;
@@ -43,6 +43,7 @@ var appPublicDir = appDir + '/Resources/public';
 var srcDir = 'src';
 var destDir = 'web';
 var tmpDir = '.tmp';
+var minify = false;
 var oldConfigs = getConfigs();
 
 function getAbsolutePath(mPath, isFile) {
@@ -93,32 +94,25 @@ gulp.task('styles', function () {
     return gulp.src(src)
       .pipe(cached(constant.destFile))<% if(use_compass){ %>
       .pipe(scssFilter)
-      .pipe(rename(function (path) {
-        path.basename = '.' + path.basename;
-      }))
-      .pipe(gulp.dest(appPublicDir + '/styles'))
       .pipe(compass({
         config_file: './config.rb', // jshint ignore:line
         sass: appPublicDir + '/styles',
-        css: appPublicDir + '/styles',
+        css: appPublicDir + '/.styles',
         bundle_exec: <%= use_bundler %> // jshint ignore:line
       }))
       .on('error', function (error) {
         console.error(error.toString());
         this.emit('end');
       })
-      .pipe(rename(function (path) {
-        path.basename = path.basename.replace('.', '');
-      }))
       .pipe(scssFilter.restore())<% } %>
-      .pipe(remember(constant.destFile))
       .pipe(changed(tmpDir + '/styles/' + constant.destFile.replace('.', '_')))
       .pipe(gulp.dest(tmpDir + '/styles/' + constant.destFile.replace('.', '_')))
+      .pipe(remember(constant.destFile))
       .pipe(concat(constant.destFile))
       .pipe(autoprefixer('last 1 version'))
       .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(ttf|eot|woff|svg))/g, '../fonts/$2'))
       .pipe(replace(/([\/\w\._-]+\/)*([\w\._-]+\.(png|jpg|gif))/g, '../images/$2'))
-      .pipe(csso())
+      .pipe(gulpIf(minify, csso()))
       .pipe(gulp.dest(destDir + '/styles'));
   };
 
@@ -155,11 +149,11 @@ gulp.task('scripts', function () {
       .pipe(jshint())
       .pipe(jshint.reporter('jshint-stylish'))
       .pipe(customScriptsFilter.restore())
-      .pipe(remember(constant.destFile))
       .pipe(changed(tmpDir + '/scripts/' + constant.destFile.replace('.', '_')))
       .pipe(gulp.dest(tmpDir + '/scripts/' + constant.destFile.replace('.', '_')))
+      .pipe(remember(constant.destFile))
       .pipe(concat(constant.destFile))
-      .pipe(uglify())
+      .pipe(gulpIf(minify, uglify()))
       .pipe(gulp.dest(destDir + '/scripts'));
   };
 
@@ -178,10 +172,10 @@ gulp.task('images', function () {
   ];
   return gulp.src(sources)
     .pipe(cached('images'))
-    .pipe(imagemin({
+    .pipe(gulpIf(minify, imagemin({
       optimizationLevel: 3,
       interlaced: true
-    }))
+    })))
     .pipe(flatten())
     .pipe(gulp.dest(destDir + '/images'));
 });
@@ -198,8 +192,8 @@ gulp.task('fonts', function () {
 
 gulp.task('clean', function () {
   del.sync([
-    tmpDir + '/**/*',
-    appPublicDir + '/styles/**/.*',
+    tmpDir,
+    appPublicDir + '/.styles',
     destDir + '/styles/**/*',
     destDir + '/scripts/**/*',
     destDir + '/fonts/**/*',
@@ -208,14 +202,12 @@ gulp.task('clean', function () {
 });
 
 gulp.task('build', ['clean'], function () {
+  minify = true;
   runSequence('styles', 'scripts', 'fonts', 'images');
 });
 
 gulp.task('watch', function () {
-  var stylesWatcher = gulp.watch([
-    appPublicDir + '/styles/**/*',
-    !appPublicDir + '/styles/**/.*'
-  ], ['styles']);
+  var stylesWatcher = gulp.watch(appPublicDir + '/styles/**/*', ['styles']);
   stylesWatcher.on('change', function (event) {
     if (event.type === 'deleted') {
       var destFiles = getDestFiles('styles', event.path);
