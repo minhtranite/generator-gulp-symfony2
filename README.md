@@ -4,6 +4,10 @@
 
 ## Change logs:
 
+###### 1.0.4:
+
+- Support override 'App domain' (browsersync proxy) via 'app/config/parameters.yml': ```gulp_symfony2_proxy: 'example.com'```.
+
 ###### 1.0.3:
 
 - Fix dest file don't rebuild when 'gulp-symfony2.yml' changed. 

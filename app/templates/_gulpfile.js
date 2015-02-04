@@ -27,13 +27,64 @@ var beeper = require('beeper');
 var chalk = require('chalk');
 var gulpIf = require('gulp-if');
 
-function getConfigs() {
-  var configs;
+function logTime() {
+  var date = new Date();
+  var hour = date.getHours();
+  hour = (hour < 10 ? '0' : '') + hour;
+  var min = date.getMinutes();
+  min = (min < 10 ? '0' : '') + min;
+  var sec = date.getSeconds();
+  sec = (sec < 10 ? '0' : '') + sec;
+  return '[' + chalk.gray(hour + ':' + min + ':' + sec) + ']';
+}
+
+function mergeObject(obj1, obj2) {
+  var obj3 = {};
+  for (var obj1Attr in obj1) {
+    obj3[obj1Attr] = obj1[obj1Attr];
+  }
+  for (var obj2Attr in obj2) {
+    obj3[obj2Attr] = obj2[obj2Attr];
+  }
+  return obj3;
+}
+
+function getAbsolutePath(mPath, isFile) {
+  if (!mPath) {
+    beeper(1);
+    console.error(logTime(), chalk.cyan('getAbsolutePath') + ': ' + chalk.red('Path is undefined.'));
+    return undefined;
+  }
+  mPath = path.normalize(mPath);
+  if (!fs.existsSync(mPath) || (isFile && !fs.statSync(mPath).isFile())) {
+    beeper(1);
+    console.error(logTime(), chalk.cyan('getAbsolutePath') + ': ' + chalk.red((isFile ? 'File ' : '') + '\'' + mPath + '\' does\'t exist.'));
+    return undefined;
+  }
+  return fs.realpathSync(mPath);
+}
+
+function yamlLoad(file) {
+  var filePath = getAbsolutePath(file, true);
+  if (typeof filePath === 'undefined') {
+    return false;
+  }
+  var object;
   try {
-    configs = yaml.safeLoad(fs.readFileSync('./gulp-symfony2.yml', 'utf8'));
+    object = yaml.safeLoad(fs.readFileSync(file, 'utf8'));
   } catch (e) {
-    console.error(chalk.red('Can\'t get configs'));
+    beeper(1);
+    console.error(logTime(), chalk.cyan('yamlLoad') + ': ' + chalk.red('Can\'t load data'));
     console.error(e);
+    object = false;
+  }
+  return object;
+}
+
+function getConfigs() {
+  var configs = yamlLoad('./gulp-symfony2.yml');
+  if (!configs) {
+    throw logTime() + ' ' + chalk.cyan('getConfigs') + ': ' + chalk.red('Can\'t get configs');
   }
   return configs;
 }
@@ -43,16 +94,13 @@ var appPublicDir = appDir + '/Resources/public';
 var srcDir = 'src';
 var destDir = 'web';
 var minify = false;
+var parameters = {
+  'gulp_symfony2_proxy': '<%= app_domain %>'
+};
 var oldConfigs = getConfigs();
-
-function getAbsolutePath(mPath, isFile) {
-  mPath = path.normalize(mPath);
-  if (!fs.existsSync(mPath) || (isFile && !fs.statSync(mPath).isFile())) {
-    console.error(chalk.red((isFile ? 'File ' : '') + '\'' + mPath + '\' does\'t exist.'));
-    beeper();
-    return undefined;
-  }
-  return fs.realpathSync(mPath);
+var yamlParameters = yamlLoad('app/config/parameters.yml');
+if (yamlParameters) {
+  parameters = mergeObject(parameters, yamlParameters.parameters);
 }
 
 function getDestFiles(objectName, file) {
@@ -212,7 +260,7 @@ gulp.task('serve', ['preServe'], function () {
   browserSync({
     files: [appDir + '/**/*.twig', srcDir + '/**/*.twig', destDir + '/**/*'],
     startPath: '/app_dev.php',
-    proxy: '<%= app_domain %>'
+    proxy: parameters.gulp_symfony2_proxy // jshint ignore:line
   });
 
   var stylesWatcher = gulp.watch(appPublicDir + '/styles/**/*', ['styles']);
