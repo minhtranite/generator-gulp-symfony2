@@ -4,6 +4,11 @@
 
 ## Change logs:
 
+###### 1.0.3:
+
+- Fix dest file don't rebuild when 'gulp-symfony2.yml' changed. 
+- Run tasks in order.
+
 ###### 1.0.2:
 
 - Use 'gulp-newer' instead of 'gulp-changed'.
@@ -138,12 +143,6 @@ Watch & rebuild file changed (dev):
 ```bash
 gulp serve
 ```
-
-### Getting To Know Yeoman
-
-Yeoman has a heart of gold. He's a person with feelings and opinions, but he's very easy to work with. If you think he's too opinionated, he can be easily convinced.
-
-If you'd like to get to know Yeoman better and meet some of his friends, [Grunt](http://gruntjs.com) and [Bower](http://bower.io), check out the complete [Getting Started Guide](https://github.com/yeoman/yeoman/wiki/Getting-Started).
 
 ## License
 

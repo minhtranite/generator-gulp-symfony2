@@ -90,13 +90,14 @@ gulp.task('styles', function () {
       return getAbsolutePath(file, true);
     });<% if(use_compass){ %>
     var scssFilter = filter('**/*.scss');<% } %>
-    return gulp.src(src)
+    gulp.src(src)
       .pipe(cached(constant.destFile))<% if(use_compass){ %>
       .pipe(scssFilter)
       .pipe(compass({
         config_file: './config.rb', // jshint ignore:line
         sass: appPublicDir + '/styles',
         css: appPublicDir + '/.styles',
+        logging: false,
         bundle_exec: <%= use_bundler %> // jshint ignore:line
       }))
       .on('error', function (error) {
@@ -141,7 +142,7 @@ gulp.task('scripts', function () {
       var ignore = appPublicDir + '/vendor';
       return path.indexOf(ignore) === -1;
     });
-    return gulp.src(src)
+    gulp.src(src)
       .pipe(cached(constant.destFile))
       .pipe(customScriptsFilter)
       .pipe(jshint())
@@ -197,12 +198,23 @@ gulp.task('clean', function () {
   ]);
 });
 
-gulp.task('build', ['clean'], function () {
+gulp.task('build', function (callback) {
   minify = true;
-  runSequence('styles', 'scripts', 'fonts', 'images');
+  runSequence('clean', 'styles', 'scripts', 'fonts', 'images', callback);
 });
 
-gulp.task('watch', function () {
+gulp.task('preServe', function (callback) {
+  minify = false;
+  runSequence('clean', 'styles', 'scripts', 'fonts', 'images', callback);
+});
+
+gulp.task('serve', ['preServe'], function () {
+  browserSync({
+    files: [appDir + '/**/*.twig', srcDir + '/**/*.twig', destDir + '/**/*'],
+    startPath: '/app_dev.php',
+    proxy: '<%= app_domain %>'
+  });
+
   var stylesWatcher = gulp.watch(appPublicDir + '/styles/**/*', ['styles']);
   stylesWatcher.on('change', function (event) {
     if (event.type === 'deleted') {
@@ -253,10 +265,7 @@ gulp.task('watch', function () {
     }
   });
   gulp.watch('bower.json', ['fonts', 'images']);
-  var gulpSymfony2Watcher = gulp.watch('gulp-symfony2.yml', [
-    'styles',
-    'scripts'
-  ]);
+  var gulpSymfony2Watcher = gulp.watch('gulp-symfony2.yml', ['styles', 'scripts']);
   gulpSymfony2Watcher.on('change', function () {
     var configs = getConfigs();
     var changes = diff(oldConfigs, configs);
@@ -267,26 +276,10 @@ gulp.task('watch', function () {
           var destFile = change.path[1];
           delete cached.caches[destFile];
           remember.forgetAll(destFile);
+          del.sync(destDir + '/' + change.path[0] + '/' + destFile);
         }
       });
     }
-  });
-});
-
-gulp.task('serve', [
-  'styles',
-  'scripts',
-  'fonts',
-  'images',
-  'watch'
-], function () {
-  browserSync.instance = browserSync.init([
-    appDir + '/**/*.twig',
-    srcDir + '/**/*.twig',
-    destDir + '/**/*'
-  ], {
-    startPath: '/app_dev.php',
-    proxy: '<%= app_domain %>'
   });
 });
 
