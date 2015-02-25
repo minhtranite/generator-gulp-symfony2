@@ -3,8 +3,8 @@
 var gulp = require('gulp');
 var yaml = require('js-yaml');
 var fs = require('fs');
-var filter = require('gulp-filter');<% if(use_compass){ %>
-var compass = require('gulp-compass');<% } %>
+var filter = require('gulp-filter');<% if(css_preprocessor != 'None'){ %>
+var <%= css_preprocessor_plugin %> = require('gulp-<%= css_preprocessor_plugin %>');<% } %>
 var concat = require('gulp-concat');
 var autoprefixer = require('gulp-autoprefixer');
 var replace = require('gulp-replace');
@@ -136,23 +136,27 @@ gulp.task('styles', function () {
   var task = function (constant) {
     var src = configs.styles[constant.destFile].map(function (file) {
       return getAbsolutePath(file, true);
-    });<% if(use_compass){ %>
-    var scssFilter = filter('**/*.scss');<% } %>
+    });<% if(css_preprocessor == 'Sass'){ %>
+    var cssPreProcessorFilter = filter('**/*.scss');<% } %><% if(css_preprocessor == 'Less'){ %>var cssPreProcessorFilter = filter('**/*.less');<% } %>
     gulp.src(src)
-      .pipe(cached(constant.destFile))<% if(use_compass){ %>
-      .pipe(scssFilter)
+      .pipe(cached(constant.destFile))<% if(css_preprocessor != 'None'){ %>
+      .pipe(cssPreProcessorFilter)<% if(css_preprocessor_plugin == 'compass'){ %>
       .pipe(compass({
         config_file: './config.rb', // jshint ignore:line
         sass: appPublicDir + '/styles',
         css: appPublicDir + '/.styles',
         logging: false,
-        bundle_exec: <%= use_bundler %> // jshint ignore:line
+        bundle_exec: <%= use_bundle %> // jshint ignore:line
       }))
       .on('error', function (error) {
         console.error(error.toString());
         this.emit('end');
-      })
-      .pipe(scssFilter.restore())<% } %>
+      })<% } %><% if(css_preprocessor_plugin == 'sass'){ %>
+      .pipe(sass())<% } %><% if(css_preprocessor_plugin == 'less'){ %>
+      .pipe(less({
+        paths: [appPublicDir + '/styles/includes']
+      }))<% } %>
+      .pipe(cssPreProcessorFilter.restore())<% } %>
       .pipe(remember(constant.destFile))
       .pipe(newer(destDir + '/styles/' + constant.destFile))
       .pipe(concat(constant.destFile))

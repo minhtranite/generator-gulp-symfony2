@@ -1,6 +1,6 @@
 {
   "name": "<%= app_name %>",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "dependencies": {},
   "devDependencies": {
     "beeper": "^1.0.0",
@@ -10,7 +10,7 @@
     "del": "^1.1.1",
     "gulp": "^3.8.10",
     "gulp-autoprefixer": "^2.1.0",
-    "gulp-cached": "^1.0.2",<% if(use_compass){ %>
+    "gulp-cached": "^1.0.2",<% if(css_preprocessor_plugin == 'compass'){ %>
     "gulp-compass": "^2.0.3",<% } %>
     "gulp-concat": "^2.4.3",
     "gulp-csso": "^0.2.9",
@@ -18,11 +18,13 @@
     "gulp-flatten": "0.0.4",
     "gulp-if": "^1.2.5",
     "gulp-imagemin": "^2.1.0",
-    "gulp-jshint": "^1.9.0",
+    "gulp-jshint": "^1.9.0",<% if(css_preprocessor_plugin == 'less'){ %>
+    "gulp-less": "^3.0.1",<% } %>
     "gulp-mux": "^0.2.0",
     "gulp-newer": "^0.5.0",
     "gulp-remember": "^0.3.0",
-    "gulp-replace": "^0.5.0",
+    "gulp-replace": "^0.5.0",<% if(css_preprocessor_plugin == 'sass'){ %>
+    "gulp-sass": "^1.3.3",<% } %>
     "gulp-uglify": "^1.0.2",
     "js-yaml": "^3.2.5",
     "jshint-stylish": "^1.0.0",

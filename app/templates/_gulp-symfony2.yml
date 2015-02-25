@@ -1,6 +1,6 @@
 styles:
   foo.css:
-<% if(use_compass){ %>    - app/Resources/public/styles/bar.scss <% } else { %>    - app/Resources/public/styles/bar.css <% } %>
+<% if(css_preprocessor == 'Sass'){ %>    - app/Resources/public/styles/bar.scss<% } else if(css_preprocessor == 'Less') { %>    - app/Resources/public/styles/bar.less<% } else { %>    - app/Resources/public/styles/bar.css<% } %>
 scripts:
   foo.js:
     - app/Resources/public/scripts/bar.js

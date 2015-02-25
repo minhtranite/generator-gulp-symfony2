@@ -4,6 +4,12 @@
 
 ## Change logs:
 
+###### 1.0.5:
+
+- Support Less.
+- Allow choose 'gulp-sass', 'gulp-less' or 'gulp-compass'.
+- Run ```bundle install``` after generate (if use bundle).
+
 ###### 1.0.4:
 
 - Support override 'App domain' (browsersync proxy) via 'app/config/parameters.yml': ```gulp_symfony2_proxy: 'example.com'```.
